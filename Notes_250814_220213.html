@@ -1,0 +1,397 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📰 Simple News Reader — HTML Only</title>
+  <style>
+    :root {
+      --bg: #0f172a; /* slate-900 */
+      --panel: #111827ee; /* gray-900 */
+      --muted: #94a3b8; /* slate-400 */
+      --text: #e5e7eb; /* gray-200 */
+      --brand: #22d3ee; /* cyan-400 */
+      --accent: #a78bfa; /* violet-400 */
+      --danger: #ef4444; /* red-500 */
+      --card: #0b1220; /* deep panel */
+      --border: #243042; /* subtle border */
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(120deg, #0b1020, #0a1728 30%, #0a1b2f 60%, #0d1022);
+      color: var(--text);
+    }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(10,15,30,.85), rgba(10,15,30,.55));
+      border-bottom: 1px solid var(--border);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand h1 { margin: 0; font-size: 1.25rem; letter-spacing: .5px; }
+    .pill { font-size: .75rem; color: #002; background: var(--brand); padding: 2px 8px; border-radius: 999px; font-weight: 700; }.grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+.panel { background: linear-gradient(180deg, var(--panel), transparent 160%); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.panel .hd { padding: 16px 16px 0; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.panel .bd { padding: 16px; }
+
+.field { display: grid; gap: 6px; margin-bottom: 12px; }
+label { font-size: .9rem; color: var(--muted); }
+input[type="text"], textarea, input[type="file"], select {
+  width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border);
+  background: #0a1222; color: var(--text); outline: none; transition: border .2s ease;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(34,211,238,.15); }
+textarea { resize: vertical; min-height: 120px; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: #0a1326; color: var(--text);
+  cursor: pointer; transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+}
+button.primary { background: linear-gradient(90deg, var(--brand), var(--accent)); color: #051018; border: none; font-weight: 700; }
+button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.3); }
+button.danger { background:#1a0e12; border-color: #44131a; color:#fecaca; }
+
+.toolbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.toolbar .left, .toolbar .right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+.list { display: grid; gap: 14px; }
+.card { background: linear-gradient(180deg, var(--card), transparent 180%); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.card .meta { display:flex; align-items:center; gap:8px; color: var(--muted); font-size:.85rem; }
+.card .hd { padding: 14px 16px 0; }
+.card .title { margin: 0; font-size: 1.25rem; }
+.card .bd { padding: 10px 16px 16px; }
+.card .thumb { width: 100%; max-height: 280px; object-fit: cover; display: block; border-bottom:1px solid var(--border); background:#060b15; }
+.tags { display:flex; gap:8px; flex-wrap: wrap; }
+.tag { font-size: .7rem; padding: 2px 8px; border-radius: 999px; background:#0e1a2e; border:1px solid var(--border); color: var(--muted); }
+
+.empty { text-align:center; color: var(--muted); padding: 24px; border:1px dashed var(--border); border-radius: 14px; }
+footer { color: var(--muted); text-align:center; padding: 24px; }
+.link { color: var(--brand); text-decoration: none; }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+        <path d="M4 6h16M4 12h16M4 18h10" stroke="url(#g)" stroke-width="2" stroke-linecap="round"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
+      </svg>
+      <h1>Simple News Reader</h1>
+      <span class="pill">HTML‑Only</span>
+    </div>
+  </header>  <main class="wrap" style="margin-top: 16px;">
+    <div class="grid">
+      <!-- Sidebar: Create Article -->
+      <section class="panel" aria-labelledby="create-hd">
+        <div class="hd" id="create-hd">Create Article</div>
+        <div class="bd">
+          <form id="articleForm">
+            <div class="field">
+              <label for="title">Title</label>
+              <input id="title" name="title" type="text" placeholder="Enter headline" required />
+            </div>
+            <div class="field">
+              <label for="author">Author</label>
+              <input id="author" name="author" type="text" placeholder="Your name (optional)" />
+            </div>
+            <div class="field">
+              <label for="category">Category</label>
+              <input id="category" name="category" type="text" placeholder="e.g., World, Sports, Tech" />
+            </div>
+            <div class="field">
+              <label for="content">Content</label>
+              <textarea id="content" name="content" placeholder="Write the full story..." required></textarea>
+            </div>
+            <div class="field">
+              <label for="image">Image (optional)</label>
+              <input id="image" name="image" type="file" accept="image/*" />
+            </div>
+            <div class="actions">
+              <button class="primary" type="submit">Publish</button>
+              <button type="button" id="resetBtn">Reset</button>
+            </div>
+          </form>
+          <hr style="border-color: var(--border); margin: 16px 0;"/>
+          <div class="actions">
+            <button id="exportBtn">Export as JSON</button>
+            <label for="importFile" class="sr-only" hidden>Import JSON</label>
+            <input id="importFile" type="file" accept="application/json" />
+            <button class="danger" id="clearAllBtn" title="Delete all saved articles">Clear All</button>
+          </div>
+        </div>
+      </section><!-- Main: Toolbar + List -->
+  <section>
+    <div class="panel" style="margin-bottom: 16px;">
+      <div class="bd">
+        <div class="toolbar">
+          <div class="left">
+            <input id="search" type="text" placeholder="Search title or content" />
+            <select id="sort">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="az">Title A–Z</option>
+              <option value="za">Title Z–A</option>
+            </select>
+          </div>
+          <div class="right">
+            <select id="filterCat">
+              <option value="">All categories</option>
+            </select>
+            <button id="seedBtn" title="Add sample posts">Add Demo Posts</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="list" class="list"></div>
+
+    <div id="empty" class="empty" hidden>
+      No articles yet. Be the first to publish!
+    </div>
+  </section>
+</div>
+
+  </main>  <footer>
+    Built with ♥ — stores data in your browser (localStorage). No server needed.
+  </footer>  <template id="cardTpl">
+    <article class="card" data-id="">
+      <img class="thumb" alt="" hidden />
+      <div class="hd">
+        <h2 class="title"></h2>
+        <div class="meta">
+          <span class="when"></span>
+          <span>•</span>
+          <span class="by"></span>
+        </div>
+      </div>
+      <div class="bd">
+        <p class="text" style="white-space: pre-wrap;"></p>
+        <div class="tags" style="margin-top: 10px;"></div>
+        <div class="actions" style="margin-top: 12px;">
+          <button class="openBtn">Open</button>
+          <button class="delBtn danger">Delete</button>
+        </div>
+      </div>
+    </article>
+  </template>  <dialog id="reader" style="max-width: 800px; width: 95%; background: #0a1222; color: var(--text); border:1px solid var(--border); border-radius: 16px;">
+    <form method="dialog" style="margin:0;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-bottom:1px solid var(--border);">
+        <strong id="rTitle"></strong>
+        <button value="close">Close</button>
+      </div>
+      <div style="padding: 16px;">
+        <img id="rImg" alt="" style="max-height: 360px; width: 100%; object-fit: cover; border-radius: 12px; display:none; border:1px solid var(--border);"/>
+        <p id="rMeta" style="color: var(--muted);"></p>
+        <div id="rBody" style="white-space: pre-wrap; line-height: 1.6;"></div>
+      </div>
+    </form>
+  </dialog>  <script>
+    const KEY = 'news.articles.v1';
+
+    /** Utilities **/
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const uid = () => crypto.randomUUID ? crypto.randomUUID() : (Date.now()+Math.random()).toString(36);
+    const nowISO = () => new Date().toISOString();
+    const fmtDate = iso => new Date(iso).toLocaleString();
+
+    const store = {
+      get() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } },
+      set(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+    };
+
+    /** State **/
+    let articles = store.get();
+
+    /** Rendering **/
+    function refreshCategoryFilter() {
+      const sel = $('#filterCat');
+      const cats = Array.from(new Set(articles.map(a => a.category).filter(Boolean))).sort();
+      const current = sel.value;
+      sel.innerHTML = '<option value="">All categories</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      sel.value = current || '';
+    }
+
+    function escapeHtml(s=''){
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    function render() {
+      const listEl = $('#list');
+      const emptyEl = $('#empty');
+      listEl.innerHTML = '';
+
+      let q = $('#search').value.trim().toLowerCase();
+      let cat = $('#filterCat').value;
+      let sort = $('#sort').value;
+
+      let view = articles.filter(a => (
+        (!q || a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q)) &&
+        (!cat || a.category === cat)
+      ));
+
+      view.sort((a,b) => {
+        if (sort === 'newest') return b.created.localeCompare(a.created);
+        if (sort === 'oldest') return a.created.localeCompare(b.created);
+        if (sort === 'az') return a.title.localeCompare(b.title);
+        if (sort === 'za') return b.title.localeCompare(a.title);
+        return 0;
+      });
+
+      if (view.length === 0) {
+        emptyEl.hidden = false; return;
+      } else emptyEl.hidden = true;
+
+      for (const a of view) {
+        const node = $('#cardTpl').content.firstElementChild.cloneNode(true);
+        node.dataset.id = a.id;
+        const img = node.querySelector('.thumb');
+        if (a.image) { img.src = a.image; img.alt = a.title; img.hidden = false; }
+        node.querySelector('.title').textContent = a.title;
+        node.querySelector('.when').textContent = fmtDate(a.created);
+        node.querySelector('.by').textContent = a.author ? `By ${a.author}` : 'Anonymous';
+        node.querySelector('.text').textContent = a.content.length > 220 ? a.content.slice(0,220) + '…' : a.content;
+        const tags = node.querySelector('.tags');
+        if (a.category) {
+          const t = document.createElement('span'); t.className = 'tag'; t.textContent = a.category; tags.appendChild(t);
+        }
+        node.querySelector('.openBtn').addEventListener('click', () => openReader(a.id));
+        node.querySelector('.delBtn').addEventListener('click', () => delArticle(a.id));
+        listEl.appendChild(node);
+      }
+    }
+
+    function openReader(id){
+      const a = articles.find(x => x.id === id); if (!a) return;
+      $('#rTitle').textContent = a.title;
+      $('#rMeta').textContent = `${a.author ? 'By ' + a.author + ' • ' : ''}${fmtDate(a.created)}${a.category ? ' • ' + a.category : ''}`;
+      $('#rBody').textContent = a.content;
+      if (a.image) { $('#rImg').src = a.image; $('#rImg').style.display = 'block'; } else { $('#rImg').style.display = 'none'; }
+      $('#reader').showModal();
+    }
+
+    /** Actions **/
+    async function toDataUrl(file){
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve('');
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function addArticle(e){
+      e.preventDefault();
+      const f = e.target;
+      const title = f.title.value.trim();
+      const content = f.content.value.trim();
+      if (!title || !content) return alert('Please add a title and content.');
+      const author = f.author.value.trim();
+      const category = f.category.value.trim();
+      const imageFile = f.image.files[0];
+      const image = await toDataUrl(imageFile);
+
+      const article = { id: uid(), title, content, author, category, image, created: nowISO() };
+      articles.unshift(article);
+      store.set(articles);
+      refreshCategoryFilter();
+      render();
+      f.reset();
+    }
+
+    function delArticle(id){
+      if (!confirm('Delete this article?')) return;
+      articles = articles.filter(a => a.id !== id);
+      store.set(articles);
+      refreshCategoryFilter();
+      render();
+    }
+
+    function exportJson(){
+      const blob = new Blob([JSON.stringify(articles, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'news-articles.json'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const list = JSON.parse(reader.result || '[]');
+          if (!Array.isArray(list)) throw new Error('Invalid file');
+          // basic shape check
+          const mapped = list.map(x => ({
+            id: x.id || uid(),
+            title: String(x.title || 'Untitled'),
+            content: String(x.content || ''),
+            author: x.author ? String(x.author) : '',
+            category: x.category ? String(x.category) : '',
+            image: x.image && typeof x.image === 'string' ? x.image : '',
+            created: x.created || nowISO(),
+          }));
+          articles = mapped;
+          store.set(articles);
+          refreshCategoryFilter();
+          render();
+        } catch (e) { alert('Could not import file.'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function clearAll(){
+      if (!confirm('This will permanently remove all saved articles from your browser. Continue?')) return;
+      articles = [];
+      store.set(articles);
+      refreshCategoryFilter();
+      render();
+    }
+
+    function seed(){
+      const demo = [
+        {
+          title: 'City Park Reopens After Renovation',
+          content: 'After a year of upgrades, the central city park reopened today with new walking paths, a children\'s play area, and energy‑efficient lighting. Local residents welcomed the greener look.',
+          author: 'City Desk', category: 'Local', image: '', created: nowISO()
+        },
+        {
+          title: 'Tech Startup Launches Affordable Smartwatch',
+          content: 'The new device offers heart‑rate tracking, GPS, and a week‑long battery life at a competitive price. Early reviewers praised the clean design and reliable performance.',
+          author: 'Tech Reporter', category: 'Technology', image: '', created: nowISO()
+        },
+        {
+          title: 'Community Volunteers Clean Riverside',
+          content: 'Over 150 volunteers joined a weekend cleanup drive along the east bank, collecting more than 500kg of plastic waste. Organizers plan monthly events to sustain the effort.',
+          author: 'Environment Beat', category: 'Environment', image: '', created: nowISO()
+        }
+      ].map(x => ({ id: uid(), ...x }));
+      articles = demo.concat(articles);
+      store.set(articles);
+      refreshCategoryFilter();
+      render();
+    }
+
+    /** Events **/
+    $('#articleForm').addEventListener('submit', addArticle);
+    $('#resetBtn').addEventListener('click', () => $('#articleForm').reset());
+    $('#exportBtn').addEventListener('click', exportJson);
+    $('#importFile').addEventListener('change', e => e.target.files[0] && importJson(e.target.files[0]));
+    $('#clearAllBtn').addEventListener('click', clearAll);
+    $('#seedBtn').addEventListener('click', seed);
+    $('#search').addEventListener('input', render);
+    $('#sort').addEventListener('change', render);
+    $('#filterCat').addEventListener('change', render);
+
+    // Initial load
+    refreshCategoryFilter();
+    render();
+  </script></body>
+</html>
